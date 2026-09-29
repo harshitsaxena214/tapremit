@@ -5,6 +5,7 @@ import pinoHttp from 'pino-http';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import healthRouter from './routes/health';
+import chainRouter from './routes/chain';
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(
 
 // Routes
 app.use('/health', healthRouter);
+app.use('/chain', chainRouter);
 
 // Error Handling
 app.use(errorHandler);
