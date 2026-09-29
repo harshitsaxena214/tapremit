@@ -3,6 +3,7 @@ import { env } from '../config/env';
 
 export const logger = pino({
   level: env.NODE_ENV === 'test' ? 'silent' : 'info',
+  redact: ['req.body.phone', 'req.query.phone'],
   transport:
     env.NODE_ENV === 'development'
       ? {

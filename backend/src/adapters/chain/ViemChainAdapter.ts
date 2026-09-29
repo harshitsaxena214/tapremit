@@ -9,18 +9,22 @@ export class ViemChainAdapter implements ChainAdapter {
   constructor() {
     this.client = createPublicClient({
       chain: monadTestnet,
-      transport: http(env.MONAD_RPC_URL),
+      transport: http(env.MONAD_RPC_URL || 'https://testnet-rpc.monad.xyz'),
     });
   }
 
   async getStatus(): Promise<ChainStatus> {
-    const start = Date.now();
-    const blockNumber = await this.client.getBlockNumber();
-    const latencyMs = Date.now() - start;
+    try {
+      const start = Date.now();
+      const blockNumber = await this.client.getBlockNumber();
+      const latencyMs = Date.now() - start;
 
-    return {
-      blockNumber: Number(blockNumber),
-      latencyMs,
-    };
+      return {
+        blockNumber: Number(blockNumber),
+        latencyMs,
+      };
+    } catch (error: any) {
+      throw { status: 502, message: 'RPC unreachable', details: error.message };
+    }
   }
 }

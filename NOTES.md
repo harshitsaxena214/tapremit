@@ -1,10 +1,10 @@
 # NOTES.md (Living Memory)
 
 ## 1. Current status
-Phase 1 (Chain connection) is completed. The backend has a viem public client for Monad testnet and a /chain/status endpoint, switchable via MOCK_CHAIN flag.
+Phase 0 done, Phase 1 done and verified in real mode, Phase 2 starting.
 
 ## 2. Phase log
-- [x] Phase 0: Scaffold (Init project, TS config, Express, Zod, Pino, /health)
+- [x] Phase 0: Scaffold
 - [x] Phase 1: Chain connection
 - [ ] Phase 2: Database and users
 - [ ] Phase 3: Auth (passkey)
@@ -14,37 +14,57 @@ Phase 1 (Chain connection) is completed. The backend has a viem public client fo
 - [ ] Phase 7: Hardening and docs
 
 ## 3. Verified facts
-*(None verified yet)*
+- **Monad testnet public RPC**: `https://testnet-rpc.monad.xyz`, chain id 10143, native token MON. Verified on 2026-09-30 (eth_blockNumber call and GET /chain/status returned realistic data). Source: https://docs.monad.xyz/developer-essentials/testnets
+- **Backup public RPCs**: `https://rpc.ankr.com/monad_testnet` and `https://rpc-testnet.monadinfra.com`
+- **Testnet explorer**: https://testnet.monadscan.com, **faucet**: https://faucet.monad.xyz (from Monad docs)
+- **Mainnet reference** (NOT used by this project): chain id 143, https://rpc.monad.xyz
 
 ## 4. Open questions and TODOs
-- Need exact AUSD contract address on Monad testnet.
-- Need Mera SDK documentation and API details for auth.
-- Need Aurora Intents testnet contract/SDK details.
-- Need Alchemy Monad testnet RPC details.
-- Monad testnet RPC URL needs manual verification (currently assuming https://rpc-devnet.monad.xyz/).
+- AUSD testnet address and decimals.
+- Mera SDK package and usage.
+- Aurora Intents testnet support.
+- Alchemy Monad endpoint.
+- Whether a PWA qualifies for the Agora mobile-app bounty (ask organizers on Discord).
 
 ## 5. Decisions
 - Scaffold created with standard Express structure, Pino for logging, and Zod for env validation.
 
-## 6. Environment variables
-- `PORT`: Server port (default: 3000)
-- `NODE_ENV`: Environment mode (development/production/test)
+## 6. Known issues / lessons
+- `https://rpc-devnet.monad.xyz` and `https://rpc.testnet.monad.xyz` both failed with ENOTFOUND. They were wrong/guessed URLs. Never use them. The working URL is `https://testnet-rpc.monad.xyz`.
+- The latencyMs returned is round-trip time from the laptop to a public RPC, NOT Monad's block time or finality. Do not use it for speed claims. In Phase 4, add a proper measurement of send-to-confirmed time.
+- Environment: Windows PowerShell. Use `curl.exe` (not `curl`) or `Invoke-RestMethod` in all examples. Restart the dev server after editing `.env` because ts-node-dev does not reload it.
 
-## 7. API contract
+## 7. Environment variables
+- `PORT`: Server port (default: 3000, optional)
+- `NODE_ENV`: Environment mode (development/production/test) (optional)
+- `MOCK_CHAIN`: Use mock chain adapter (default: true, optional)
+- `MONAD_RPC_URL`: Monad testnet RPC URL (required when MOCK_CHAIN is false)
+- `DB_PATH`: Path to SQLite database file (default: ./data/tapremit.db, optional)
+
+## 8. API contract
 - **GET /health**
   - **Auth**: None
   - **Request**: No body
   - **Response**: `{ "status": "ok", "timestamp": "...", "uptime": 123.45 }`
-  - **cURL**: `curl http://localhost:3000/health`
+  - **cURL**: `curl.exe http://localhost:3000/health`
 
 - **GET /chain/status**
   - **Auth**: None
   - **Request**: No body
-  - **Response**: `{ "blockNumber": 5001234, "latencyMs": 45 }`
-  - **cURL**: `curl http://localhost:3000/chain/status`
+  - **Response**: `{ "blockNumber": 66789166, "latencyMs": 517 }`
+  - **cURL**: `curl.exe http://localhost:3000/chain/status`
 
-## 8. Known issues
-*(None yet)*
+- **POST /users** (temporary, will be protected/changed in Phase 3)
+  - **Auth**: None
+  - **Request**: `{ "handle": "alice", "display_name": "Alice", "phone": "+1234567890" }` (phone is optional)
+  - **Response**: `{ "id": "uuid...", "handle": "alice", "display_name": "Alice", "created_at": "..." }` (no phone or wallet returned)
+  - **cURL**: `Invoke-RestMethod -Method Post -Uri http://localhost:3000/users -ContentType "application/json" -Body '{"handle":"alice","display_name":"Alice"}'`
+
+- **GET /users/lookup?handle=...** (temporary, will be protected/changed in Phase 3)
+  - **Auth**: None
+  - **Request**: Query param `handle` or `phone`
+  - **Response**: `{ "handle": "alice", "display_name": "Alice" }`
+  - **cURL**: `curl.exe "http://localhost:3000/users/lookup?handle=alice"`
 
 ## 9. Bounty proof
 - **Agora**: Not started

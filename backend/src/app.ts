@@ -6,6 +6,7 @@ import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import healthRouter from './routes/health';
 import chainRouter from './routes/chain';
+import usersRouter from './routes/users';
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use(
 // Routes
 app.use('/health', healthRouter);
 app.use('/chain', chainRouter);
+app.use('/users', usersRouter);
 
 // Error Handling
 app.use(errorHandler);

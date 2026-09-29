@@ -32,3 +32,12 @@ yarn-error.log*
 # Tooling/Misc
 .vercel/
 .DS_Store
+
+# Database files (can contain user data)
+backend/data/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
