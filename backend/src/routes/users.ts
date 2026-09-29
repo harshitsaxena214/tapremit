@@ -28,19 +28,45 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
 
 router.get('/lookup', (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { handle, phone } = req.query;
+    const { handle } = req.query;
     
-    let user;
-    if (handle && typeof handle === 'string') {
-      user = usersRepo.getByHandle(handle.toLowerCase());
-    } else if (phone && typeof phone === 'string') {
-      user = usersRepo.getByPhone(phone);
-    } else {
-      return res.status(400).json({ error: 'Must provide handle or phone query parameter' });
+    if (!handle || typeof handle !== 'string') {
+      throw { status: 400, message: 'Must provide handle query parameter' };
     }
 
+    const user = usersRepo.getByHandle(handle.toLowerCase());
+
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      throw { status: 404, message: 'User not found' };
+    }
+
+    res.json({
+      handle: user.handle,
+      display_name: user.display_name,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+const lookupBodySchema = z.object({
+  handle: z.string().optional(),
+  phone: z.string().optional(),
+}).refine(data => data.handle || data.phone, { message: 'Must provide handle or phone' });
+
+router.post('/lookup', (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = lookupBodySchema.parse(req.body);
+    let user;
+    
+    if (data.handle) {
+      user = usersRepo.getByHandle(data.handle.toLowerCase());
+    } else if (data.phone) {
+      user = usersRepo.getByPhone(data.phone);
+    }
+    
+    if (!user) {
+      throw { status: 404, message: 'User not found' };
     }
 
     res.json({

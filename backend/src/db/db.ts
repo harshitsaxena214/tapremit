@@ -10,7 +10,7 @@ if (dir !== '.' && !fs.existsSync(dir)) {
 }
 
 export const db = new Database(env.DB_PATH, {
-  verbose: env.NODE_ENV === 'development' ? console.log : undefined,
+  verbose: env.DEBUG_SQL ? console.log : undefined,
 });
 
 db.pragma('journal_mode = WAL');

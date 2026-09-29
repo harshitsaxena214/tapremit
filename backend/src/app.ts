@@ -17,7 +17,16 @@ app.use(express.json());
 app.use(
   pinoHttp({
     logger,
-    autoLogging: process.env.NODE_ENV !== 'test',
+    autoLogging: process.env.NODE_ENV !== 'test' || process.env.ENABLE_TEST_LOGGING === 'true',
+    serializers: {
+      req: (req) => {
+        const newReq = { ...req };
+        if (newReq.url) {
+          newReq.url = newReq.url.split('?')[0];
+        }
+        return newReq;
+      }
+    }
   })
 );
 

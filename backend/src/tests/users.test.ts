@@ -35,7 +35,9 @@ describe('Users API', () => {
   });
 
   it('should lookup user by phone', async () => {
-    const response = await request(app).get('/users/lookup?phone=%2B123456789');
+    const response = await request(app)
+      .post('/users/lookup')
+      .send({ phone: '+123456789' });
     expect(response.status).toBe(200);
     expect(response.body.handle).toBe('testuser');
   });

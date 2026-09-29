@@ -10,6 +10,7 @@ const envSchema = z.object({
   MOCK_CHAIN: z.enum(['true', 'false']).default('true').transform((val) => val === 'true'),
   MONAD_RPC_URL: z.string().url().optional(),
   DB_PATH: z.string().default(process.env.NODE_ENV === 'test' ? ':memory:' : './data/tapremit.db'),
+  DEBUG_SQL: z.enum(['true', 'false']).default('false').transform((val) => val === 'true'),
 }).refine(data => data.MOCK_CHAIN === true || !!data.MONAD_RPC_URL, {
   message: "MONAD_RPC_URL is required when MOCK_CHAIN is false",
   path: ["MONAD_RPC_URL"]

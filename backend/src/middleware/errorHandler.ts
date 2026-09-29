@@ -10,12 +10,24 @@ export const errorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction
 ) => {
-  logger.error({ err, path: req.path }, 'Unhandled error');
+  let status = err.status || 500;
+  let message = err.message || 'Internal Server Error';
 
   if (err instanceof ZodError) {
-    return res.status(400).json({ error: 'Validation Error', details: err.errors });
+    status = 400;
+    message = 'Validation Error';
   }
 
+  if (status >= 400 && status < 500) {
+    logger.warn({ status, path: req.path, errMessage: message }, 'Client error');
+    return res.status(status).json({ 
+      error: message, 
+      details: err instanceof ZodError ? err.errors : undefined 
+    });
+  }
+
+  logger.error({ err, path: req.path }, 'Unhandled error');
+  
   if (err.status) {
     return res.status(err.status).json({ error: err.message });
   }

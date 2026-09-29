@@ -28,6 +28,9 @@ Phase 0 done, Phase 1 done and verified in real mode, Phase 2 starting.
 
 ## 5. Decisions
 - Scaffold created with standard Express structure, Pino for logging, and Zod for env validation.
+- Switched phone lookups to POST /users/lookup with JSON body to prevent phone numbers appearing in URLs, and stripped query strings from pino-http logs.
+- Expected client errors (400, 404, 409) log as WARN without stack traces, reserving ERROR for true 5xx faults.
+- Better-sqlite3 `verbose` logging is disabled by default and requires the `DEBUG_SQL` flag. Bound params are never logged.
 
 ## 6. Known issues / lessons
 - `https://rpc-devnet.monad.xyz` and `https://rpc.testnet.monad.xyz` both failed with ENOTFOUND. They were wrong/guessed URLs. Never use them. The working URL is `https://testnet-rpc.monad.xyz`.
@@ -40,6 +43,7 @@ Phase 0 done, Phase 1 done and verified in real mode, Phase 2 starting.
 - `MOCK_CHAIN`: Use mock chain adapter (default: true, optional)
 - `MONAD_RPC_URL`: Monad testnet RPC URL (required when MOCK_CHAIN is false)
 - `DB_PATH`: Path to SQLite database file (default: ./data/tapremit.db, optional)
+- `DEBUG_SQL`: Enable sqlite query logging (default: false, optional)
 
 ## 8. API contract
 - **GET /health**
@@ -62,9 +66,15 @@ Phase 0 done, Phase 1 done and verified in real mode, Phase 2 starting.
 
 - **GET /users/lookup?handle=...** (temporary, will be protected/changed in Phase 3)
   - **Auth**: None
-  - **Request**: Query param `handle` or `phone`
+  - **Request**: Query param `handle`
   - **Response**: `{ "handle": "alice", "display_name": "Alice" }`
   - **cURL**: `curl.exe "http://localhost:3000/users/lookup?handle=alice"`
+
+- **POST /users/lookup** (temporary, will be protected/changed in Phase 3)
+  - **Auth**: None
+  - **Request**: `{ "phone": "+1234567890" }` or `{ "handle": "alice" }`
+  - **Response**: `{ "handle": "alice", "display_name": "Alice" }`
+  - **cURL**: `Invoke-RestMethod -Method Post -Uri http://localhost:3000/users/lookup -ContentType "application/json" -Body '{"phone":"+1234567890"}'`
 
 ## 9. Bounty proof
 - **Agora**: Not started
