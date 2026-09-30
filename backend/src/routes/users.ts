@@ -1,32 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { usersRepo } from '../db/users.repository';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
-const createUserSchema = z.object({
-  handle: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/).toLowerCase(),
-  display_name: z.string().min(1),
-  phone: z.string().optional(),
-});
-
-router.post('/', (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const data = createUserSchema.parse(req.body);
-    const user = usersRepo.create(data);
-    
-    res.status(201).json({
-      id: user.id,
-      handle: user.handle,
-      display_name: user.display_name,
-      created_at: user.created_at,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get('/lookup', (req: Request, res: Response, next: NextFunction) => {
+router.get('/lookup', requireAuth, (req: Request, res: Response, next: NextFunction) => {
   try {
     const { handle } = req.query;
     
@@ -54,7 +33,7 @@ const lookupBodySchema = z.object({
   phone: z.string().optional(),
 }).refine(data => data.handle || data.phone, { message: 'Must provide handle or phone' });
 
-router.post('/lookup', (req: Request, res: Response, next: NextFunction) => {
+router.post('/lookup', requireAuth, (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = lookupBodySchema.parse(req.body);
     let user;

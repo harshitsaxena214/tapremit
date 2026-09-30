@@ -11,3 +11,27 @@
    - Do not modify files outside the current phase's scope without asking. Do not add dependencies without telling me why.
 4. **Code conventions**: TypeScript strict, zod validation, pino logging, small files, one route file per feature, business logic in `services/`, external calls in `adapters/`.
 5. **Before every session**: read `NOTES.md` fully.
+
+## Privacy and Logging Rules
+- Never log personal or secret data: phone numbers, tokens, JWTs, passkey credentials, challenges, private keys, API keys. Redaction must cover body, query AND url.
+- Never put sensitive data in URLs or query strings (use POST with a JSON body). Log only the URL path, never the query string.
+- Never log SQL bound parameters. DEBUG_SQL must stay false by default and must never be enabled with real or sensitive data.
+- Public and lookup endpoints return only public fields (handle, display_name). Never return phone, wallet address, or internal ids from them.
+- Expected client errors (400, 401, 404, 409) are logged at WARN with a short message and no stack. Only real 5xx errors use ERROR with a stack.
+- Every phase that touches user data or auth must include a test that captures log output and asserts sensitive strings do not appear.
+
+## Accuracy and Verification Rules
+- Do not state facts about third-party SDKs, contracts or APIs unless they are in NOTES.md "Verified facts" with a source. If unsure, say "unverified" instead of asserting.
+- Do not invent or default URLs, addresses, package names or method names. Wrong guessed RPC hostnames already cost us time.
+- Do not claim a library behaves a certain way without evidence. When unsure, say so.
+- Do not claim "verified" or "thoroughly tested" unless the test actually exercises that behavior. Say exactly what was and was not tested.
+
+## Environment Rules
+- Developer machine is Windows PowerShell. Give commands for PowerShell: use curl.exe (not curl) or Invoke-RestMethod.
+- ts-node-dev does not reload .env. Remind me to restart the dev server after any .env change.
+- Speed claims: latencyMs from /chain/status is laptop-to-public-RPC round trip, NOT Monad block time or finality. Never use it as a speed claim. Use only the measured send-to-confirmed time from Phase 4.
+
+## Workflow Rules
+- Before every commit remind me to run `git status` and confirm no .env, backend/data/, .db, -wal or -shm files are staged.
+- Suggest commit messages as plain text, without markdown fences or a "text" label.
+- If a plan step relies on an unverified sponsor requirement (e.g. PWA Agora bounty), list it in NOTES.md Open questions instead of assuming.

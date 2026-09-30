@@ -7,6 +7,7 @@ import { errorHandler } from './middleware/errorHandler';
 import healthRouter from './routes/health';
 import chainRouter from './routes/chain';
 import usersRouter from './routes/users';
+import authRouter from './routes/auth';
 
 const app = express();
 
@@ -20,11 +21,14 @@ app.use(
     autoLogging: process.env.NODE_ENV !== 'test' || process.env.ENABLE_TEST_LOGGING === 'true',
     serializers: {
       req: (req) => {
-        const newReq = { ...req };
-        if (newReq.url) {
-          newReq.url = newReq.url.split('?')[0];
-        }
-        return newReq;
+        return {
+          id: req.id,
+          method: req.method,
+          url: req.url ? req.url.split('?')[0] : undefined,
+          headers: req.headers,
+          remoteAddress: req.remoteAddress,
+          remotePort: req.remotePort,
+        };
       }
     }
   })
@@ -34,6 +38,7 @@ app.use(
 app.use('/health', healthRouter);
 app.use('/chain', chainRouter);
 app.use('/users', usersRouter);
+app.use('/auth', authRouter);
 
 // Error Handling
 app.use(errorHandler);

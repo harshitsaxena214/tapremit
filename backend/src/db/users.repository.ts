@@ -28,7 +28,23 @@ export const usersRepo = {
       return usersRepo.getById(id)!;
     } catch (error: any) {
       if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-        throw { status: 409, message: 'Handle or phone already exists' };
+        if (user.phone && error.message.includes('phone')) {
+          try {
+            stmt.run({
+              id,
+              handle: user.handle,
+              display_name: user.display_name,
+              phone: null,
+            });
+            return usersRepo.getById(id)!;
+          } catch (retryError: any) {
+             if (retryError.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+               throw { status: 409, message: 'Registration failed due to a conflict' };
+             }
+             throw retryError;
+          }
+        }
+        throw { status: 409, message: 'Registration failed due to a conflict' };
       }
       throw error;
     }
