@@ -32,8 +32,8 @@ export default function ExpiryCountdown({ expiresAt, onExpire }: ExpiryCountdown
 
   if (isExpired) {
     return (
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs font-semibold">
-        <AlertOctagon className="w-4 h-4 text-rose-400" />
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-[#F87171]/10 border border-[#F87171]/30 text-[#FCA5A5] text-[12px] font-[500]">
+        <AlertOctagon className="w-3.5 h-3.5 text-[#F87171]" />
         <span>Proposal Expired (TTL Exceeded)</span>
       </div>
     );
@@ -43,15 +43,15 @@ export default function ExpiryCountdown({ expiresAt, onExpire }: ExpiryCountdown
 
   return (
     <div
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-[10px] border text-[12px] font-[500] transition-colors ${
         isWarning
-          ? 'bg-amber-950/50 border-amber-800/80 text-amber-300 animate-pulse'
-          : 'bg-indigo-950/40 border-indigo-800/50 text-indigo-300'
+          ? 'bg-[#F5B301]/10 border-[#F5B301]/40 text-[#FFC933] animate-pulse motion-reduce:animate-none'
+          : 'bg-[var(--surface-2)] border-[var(--line)] text-[var(--ink-muted)]'
       }`}
     >
-      <Timer className={`w-4 h-4 ${isWarning ? 'text-amber-400' : 'text-indigo-400'}`} />
+      <Timer className={`w-3.5 h-3.5 ${isWarning ? 'text-[var(--amber)]' : 'text-[var(--ink-faint)]'}`} />
       <span>
-        Expires in: <strong className="font-mono text-white text-sm">{formattedTime}</strong>
+        Expires in: <strong className="font-mono tabular-nums text-[var(--ink)] text-[13px]">{formattedTime}</strong>
       </span>
     </div>
   );
