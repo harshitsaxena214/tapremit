@@ -1,0 +1,64 @@
+:root {
+  --bg: #0F0F10;
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-2: rgba(255, 255, 255, 0.06);
+  --ink: #EDEDEF;
+  --ink-muted: rgba(237, 237, 239, 0.66);
+  --ink-faint: rgba(237, 237, 239, 0.5);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --amber: #F5B301;
+  --amber-2: #FFC933;
+  --success: #4ADE80;
+  --warning: #FBBF24;
+  --danger: #F87171;
+  --info: #7DD3FC;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --e-reveal: cubic-bezier(0.16, 1, 0.3, 1);
+  --e-soft: cubic-bezier(0.25, 0.8, 0.3, 1);
+  --gutter: clamp(12px, 2.7vw, 52px);
+}
+
+@media (max-width: 767px) {
+  :root {
+    --gutter: 12px;
+  }
+}
+
+/* Page chrome top glow */
+.app-chrome-glow {
+  background:
+    radial-gradient(520px circle at 50% -10%, rgba(245, 179, 1, 0.07), transparent 100%),
+    radial-gradient(600px circle at 85% 0%, rgba(40, 60, 120, 0.10), transparent 100%),
+    var(--bg);
+}
+
+/* Entrance fade up */
+@keyframes appFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-app-fade {
+  animation: appFadeUp 0.6s var(--e-reveal) both;
+}
+
+.anim-app-stagger-1 { animation-delay: 0.05s; }
+.anim-app-stagger-2 { animation-delay: 0.1s; }
+.anim-app-stagger-3 { animation-delay: 0.15s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-app-fade {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
