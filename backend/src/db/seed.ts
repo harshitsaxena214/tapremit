@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { db } from './db';
 import { runMigrations } from './migrate';
 import { usersRepo } from './users.repository';
 import { proposalsRepo } from './proposals.repository';
@@ -7,9 +8,14 @@ import { auditRepo } from './audit.repository';
 import { computeCanonicalProposalHash } from '../services/proposal.service';
 import { env } from '../config/env';
 
-function getOrGenerateAddress(envAddress?: string): string {
+function getOrGenerateAddress(envAddress?: string, varName: string = 'wallet'): string {
   if (envAddress && envAddress.startsWith('0x') && envAddress.length === 42) {
     return envAddress;
+  }
+  if (env.NODE_ENV === 'production' || env.SEED_ON_BOOT) {
+    throw new Error(
+      `Missing or invalid ${varName}. In production / SEED_ON_BOOT, you must explicitly set ${varName} to a valid 0x address. Random wallet generation is disallowed.`
+    );
   }
   return privateKeyToAccount(generatePrivateKey()).address;
 }
@@ -19,10 +25,10 @@ export function seedDemoData() {
 
   console.log('🌱 Seeding demo accounts and contacts...');
 
-  const aliceWallet = getOrGenerateAddress(env.SEED_ALICE_WALLET);
-  const riyaWallet = getOrGenerateAddress(env.SEED_RIYA_WALLET);
-  const bobWallet = getOrGenerateAddress(env.SEED_BOB_WALLET);
-  const charlieWallet = getOrGenerateAddress(env.SEED_CHARLIE_WALLET);
+  const aliceWallet = getOrGenerateAddress(env.SEED_ALICE_WALLET, 'SEED_ALICE_WALLET');
+  const riyaWallet = getOrGenerateAddress(env.SEED_RIYA_WALLET, 'SEED_RIYA_WALLET');
+  const bobWallet = getOrGenerateAddress(env.SEED_BOB_WALLET, 'SEED_BOB_WALLET');
+  const charlieWallet = getOrGenerateAddress(env.SEED_CHARLIE_WALLET, 'SEED_CHARLIE_WALLET');
 
   // 1. Alice (Primary demo user / sender)
   let alice = usersRepo.getByHandle('alice_agent');
@@ -34,6 +40,10 @@ export function seedDemoData() {
       wallet_address: aliceWallet,
     });
     console.log('  Created user: @alice_agent (Primary Demo Sender)');
+  } else if (!alice.wallet_address) {
+    db.prepare('UPDATE users SET wallet_address = ? WHERE id = ?').run(aliceWallet, alice.id);
+    alice = usersRepo.getById(alice.id)!;
+    console.log('  Assigned wallet to @alice_agent:', aliceWallet);
   }
 
   // 2. Riya (Known Contact — has prior settled transaction)
@@ -46,6 +56,10 @@ export function seedDemoData() {
       wallet_address: riyaWallet,
     });
     console.log('  Created user: @riya (Known Contact)');
+  } else if (!riya.wallet_address) {
+    db.prepare('UPDATE users SET wallet_address = ? WHERE id = ?').run(riyaWallet, riya.id);
+    riya = usersRepo.getById(riya.id)!;
+    console.log('  Assigned wallet to @riya:', riyaWallet);
   }
 
   // 3. Bob (First-Time Recipient — no prior transactions)
@@ -58,6 +72,10 @@ export function seedDemoData() {
       wallet_address: bobWallet,
     });
     console.log('  Created user: @bob_builder (First-Time Recipient)');
+  } else if (!bob.wallet_address) {
+    db.prepare('UPDATE users SET wallet_address = ? WHERE id = ?').run(bobWallet, bob.id);
+    bob = usersRepo.getById(bob.id)!;
+    console.log('  Assigned wallet to @bob_builder:', bobWallet);
   }
 
   // 4. Charlie (Additional Contact)
@@ -70,6 +88,10 @@ export function seedDemoData() {
       wallet_address: charlieWallet,
     });
     console.log('  Created user: @charlie (Additional Contact)');
+  } else if (!charlie.wallet_address) {
+    db.prepare('UPDATE users SET wallet_address = ? WHERE id = ?').run(charlieWallet, charlie.id);
+    charlie = usersRepo.getById(charlie.id)!;
+    console.log('  Assigned wallet to @charlie:', charlieWallet);
   }
 
   // 5. Check if historical transaction exists between Alice and Riya

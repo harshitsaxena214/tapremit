@@ -15,6 +15,7 @@ export type ProposalStatus =
 
 export type ProposalExecutionSubstate =
   | 'awaiting_broadcast'
+  | 'broadcast_accepted'
   | 'broadcasted_unknown'
   | 'included_pending_finality'
   | 'not_found_needs_review';
@@ -124,8 +125,8 @@ export const proposalsRepo = {
 
   listByUserId: (userId: string, limit: number = 20): Proposal[] => {
     return db
-      .prepare('SELECT * FROM proposals WHERE user_id = ? ORDER BY rowid DESC LIMIT ?')
-      .all(userId, limit) as Proposal[];
+      .prepare('SELECT * FROM proposals WHERE user_id = ? OR recipient_id = ? ORDER BY rowid DESC LIMIT ?')
+      .all(userId, userId, limit) as Proposal[];
   },
 
   getByIdempotencyKey: (key: string): Proposal | undefined => {
@@ -267,7 +268,7 @@ export const proposalsRepo = {
       .prepare(`
         SELECT * FROM proposals
         WHERE execution_mode = 'testnet'
-          AND (status = 'submitted' OR execution_substate IN ('awaiting_broadcast', 'broadcasted_unknown', 'included_pending_finality', 'not_found_needs_review'))
+          AND (status = 'submitted' OR execution_substate IN ('awaiting_broadcast', 'broadcast_accepted', 'broadcasted_unknown', 'included_pending_finality', 'not_found_needs_review'))
       `)
       .all() as Proposal[];
   },
@@ -328,8 +329,20 @@ export const proposalsRepo = {
 
 export function toPublicProposal(proposal: Proposal) {
   const { execution_signed_tx, ...safeProposal } = proposal;
+  let sender_handle: string | undefined;
+  try {
+    if (proposal.user_id) {
+      const sender = db.prepare('SELECT handle FROM users WHERE id = ?').get(proposal.user_id) as { handle: string } | undefined;
+      if (sender) {
+        sender_handle = sender.handle;
+      }
+    }
+  } catch {
+    // fallback gracefully
+  }
   return {
     ...safeProposal,
+    sender_handle,
     policy_reasons:
       typeof safeProposal.policy_reasons === 'string'
         ? JSON.parse(safeProposal.policy_reasons || '[]')

@@ -1,17 +1,17 @@
 # NOTES.md (Living Memory)
 
 ## 1. Current status
-Phase 0, 1, 2, 3, AI Agent Proposal Flow (Phases B-F), Phase G (Approval & Audit Correctness Gaps), and Phase UI (Minimal Judge Web UI) completed and verified (37 tests passing across backend and frontend suites). Full 4-screen flow implemented: Sign in with 1-click demo accounts, Dashboard with simulated balance & agent prompt box, Proposal review with live TTL countdown & policy rules, Receipt with prominent SIMULATED badges & cryptographic audit timeline.
+Phase 0, 1, 2, 3, AI Agent Proposal Flow (Phases B-F), Phase G (Approval & Audit Correctness Gaps), Phase 4 (Monad Payment Executor & Deployment Readiness), and Phase UI (Judge Web UI with live MON limits, dynamic sync, and verified browser E2E testing) completed and verified (87 backend tests passing, frontend cleanly compiled with 0 TypeScript errors). Live on-chain settlement on Monad testnet verified with real transaction hash and MonadVision block explorer integration.
 
 ## 2. Phase log
 - [x] Phase 0: Scaffold
 - [x] Phase 1: Chain connection
 - [x] Phase 2: Database and users
-- [x] Phase 3: Auth (passkey)
+- [x] Phase 3: Auth (passkey & mock judge flow)
 - [x] Phase Agent: AI Agent proposal flow, deterministic policy engine, proposal hashing, approval state machine, append-only audit trail
 - [x] Phase G: Approval and audit correctness gaps (CAS transitions, approval-time policy recheck, denied vs rejected separation, audit hash chain, allowlist redaction)
-- [x] Phase UI: Minimal judge-ready Web UI (Sign in, Dashboard, Proposal Review, Receipt & Timeline)
-- [ ] Phase 4: AUSD balance and transfer
+- [x] Phase 4: Monad testnet native transfer executor, nonce management, robust receipt polling, finality verification, startup sweep, and deployment readiness
+- [x] Phase UI: Full judge-ready Web UI (Sign in, Dashboard with live MON limits, Proposal Review, Receipt & Timeline, dynamic sent/received history)
 - [ ] Phase 5: Aurora Intents adapter
 - [ ] Phase 6: History and live status
 - [ ] Phase 7: Hardening and docs
@@ -52,7 +52,8 @@ Phase 0, 1, 2, 3, AI Agent Proposal Flow (Phases B-F), Phase G (Approval & Audit
 - Canonical proposal hash includes `recipient_wallet` in addition to handle/amount/network.
 - Immutability of `users.wallet_address` is strictly enforced by SQLite trigger `users_wallet_address_immutable` (BEFORE UPDATE OF wallet_address).
 - `GLOBAL_DAILY_LIMIT_MON` (default 2.0 MON) is enforced both in the policy engine and inside the executor.
-- Fail closed on stuck transactions: Real sends refuse execution if any proposal is in `broadcasted_unknown` or `not_found_needs_review`, unless `OPERATOR_OVERRIDE_ALLOW_SENDS=true`.
+- Fail closed on stuck transactions: Real sends refuse execution if any proposal is in `broadcasted_unknown` or `not_found_needs_review`, unless `OPERATOR_OVERRIDE_ALLOW_SENDS=true`. Normal mempool acceptance uses `broadcast_accepted` and does not lock subsequent sends.
+- Substate distinction: `broadcast_accepted` (node returned tx hash, awaiting inclusion) vs `broadcasted_unknown` (ambiguous transport drop/timeout). Only true ambiguity and `not_found_needs_review` trigger the stuck-proposal lock and nonce ambiguity flag. Normal sends never show "unknown" in the API.
 - Finality verification: Re-queries receipt on every poll; resets substate to `broadcasted_unknown` if receipt disappears; only marks `confirmed` when `receipt.blockNumber <= finalizedBlockNumber` AND `receipt.blockHash === finalizedBlock.hash`.
 
 ## 6. Known issues / lessons
